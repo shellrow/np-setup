@@ -2,6 +2,7 @@ use std::error::Error;
 use std::fs::File;
 use std::process::Command;
 use sha2::{Sha256, Digest};
+use privilege::runas::Command as RunasCommand;
 
 // Check if npcap is installed
 pub fn is_npcap_installed() -> bool {
@@ -23,10 +24,14 @@ pub fn install_npcap() -> Result<(), Box<dyn Error>> {
     let hash = "3C846F5F62A217E3CF2052749CDE159E946248022781097C58815386DA6B9C46";
     let npcap_installer_url = "https://npcap.com/dist/".to_owned() + npcap_installer_filename;
 
-    // Download npcap installer
-    let mut response = reqwest::blocking::get(&npcap_installer_url)?;
-    let mut file = File::create(npcap_installer_filename)?;
-    response.copy_to(&mut file)?;
+    // Download npcap installer if not exists
+    if !std::path::Path::new(npcap_installer_filename).exists() {
+        let mut response = reqwest::blocking::get(&npcap_installer_url)?;
+        let mut file = File::create(npcap_installer_filename)?;
+        response.copy_to(&mut file)?;
+        println!("Waiting for virus scan to complete (10 seconds) ...");
+        std::thread::sleep(std::time::Duration::from_secs(10));
+    }
 
     // Checksum
     let mut file = File::open(npcap_installer_filename)?;
@@ -35,22 +40,17 @@ pub fn install_npcap() -> Result<(), Box<dyn Error>> {
     let hash_result = hasher.finalize();
     let hash_result = format!("{:X}", hash_result);
 
-    // Close file
-    drop(file);
-
     if hash_result != hash {
-        // print downloaded file hash
+        // Print downloaded file hash
         println!("Downloaded file hash: {}", hash_result);
         return Err("Error: checksum failed...".into());
     }
 
-    // Run installer
-    let mut child = Command::new(npcap_installer_filename)
+    let exit_status = RunasCommand::new(npcap_installer_filename)
         .arg("/loopback_support=yes")
         .arg("/winpcap_mode=yes")
-        .spawn()?;
-    let ecode = child.wait()?;
-    if !ecode.success() {
+        .run()?;
+    if !exit_status.success() {
         return Err("Error: Npcap installation failed !".into());
     }
 
