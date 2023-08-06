@@ -1,21 +1,14 @@
 use std::error::Error;
 use std::fs::File;
-use std::process::Command;
+//use std::process::Command;
 use sha2::{Sha256, Digest};
 use privilege::runas::Command as RunasCommand;
+use crate::sys;
 
 // Check if npcap is installed
 pub fn is_npcap_installed() -> bool {
-    let output = Command::new("sc")
-        .arg("query")
-        .arg("npf")
-        .output()
-        .expect("failed to execute process");
-    let output = String::from_utf8_lossy(&output.stdout);
-    if output.contains("RUNNING") {
-        return true;
-    }
-    false
+    let (installed, _version) = sys::get_npcap_status();
+    return installed;
 }
 
 // Download and Run npcap installer
