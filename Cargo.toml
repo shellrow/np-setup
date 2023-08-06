@@ -1,0 +1,11 @@
+[package]
+name = "np-setup"
+version = "0.0.1"
+edition = "2021"
+authors = ["shellrow <shellrow@protonmail.com>"]
+description = "Placeholder"
+repository = "https://github.com/shellrow/np-setup"
+readme = "README.md"
+license = "MIT"
+
+[dependencies]
