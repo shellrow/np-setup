@@ -1,45 +1,39 @@
 use std::error::Error;
 use std::fs::File;
-//use std::process::Command;
 use sha2::{Sha256, Digest};
 use privilege::runas::Command as RunasCommand;
 use crate::sys;
+use crate::define;
 
 // Check if npcap is installed
 pub fn is_npcap_installed() -> bool {
-    let (installed, _version) = sys::get_npcap_status();
-    return installed;
+    sys::software_installed(define::NPCAP_SOFTWARE_NAME.to_owned())
 }
 
 // Download and Run npcap installer
 pub fn install_npcap() -> Result<(), Box<dyn Error>> {
-    let npcap_installer_filename = "npcap-1.76.exe";
-    let hash = "3C846F5F62A217E3CF2052749CDE159E946248022781097C58815386DA6B9C46";
-    let npcap_installer_url = "https://npcap.com/dist/".to_owned() + npcap_installer_filename;
-
+    let npcap_installer_url = format!("{}{}", define::NPCAP_DIST_BASE_URL, define::NPCAP_INSTALLER_FILENAME);
     // Download npcap installer if not exists
-    if !std::path::Path::new(npcap_installer_filename).exists() {
-        let mut response = reqwest::blocking::get(&npcap_installer_url)?;
-        let mut file = File::create(npcap_installer_filename)?;
+    if !std::path::Path::new(define::NPCAP_INSTALLER_FILENAME).exists() {
+        let mut response: reqwest::blocking::Response = reqwest::blocking::get(&npcap_installer_url)?;
+        let mut file: File = File::create(define::NPCAP_INSTALLER_FILENAME)?;
         response.copy_to(&mut file)?;
         println!("Waiting for virus scan to complete (10 seconds) ...");
         std::thread::sleep(std::time::Duration::from_secs(10));
     }
-
     // Checksum
-    let mut file = File::open(npcap_installer_filename)?;
+    let mut file: File = File::open(define::NPCAP_INSTALLER_FILENAME)?;
     let mut hasher = Sha256::new();
     std::io::copy(&mut file, &mut hasher)?;
     let hash_result = hasher.finalize();
-    let hash_result = format!("{:X}", hash_result);
+    let hash_result: String = format!("{:X}", hash_result);
 
-    if hash_result != hash {
-        // Print downloaded file hash
+    if hash_result != define::NPCAP_INSTALLER_HASH {
         println!("Downloaded file hash: {}", hash_result);
         return Err("Error: checksum failed...".into());
     }
 
-    let exit_status = RunasCommand::new(npcap_installer_filename)
+    let exit_status: std::process::ExitStatus = RunasCommand::new(define::NPCAP_INSTALLER_FILENAME)
         .arg("/loopback_support=yes")
         .arg("/winpcap_mode=yes")
         .run()?;

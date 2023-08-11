@@ -13,25 +13,24 @@ pub fn get_os_bit() -> String {
     }
 }
 
-// Get npcap installation status
-// Return: (installed, version)
-pub fn get_npcap_status() -> (bool, String) {
+// Get software installation status
+pub fn software_installed(software_name: String) -> bool {
     let hklm: RegKey = RegKey::predef(HKEY_LOCAL_MACHINE);
     let os_bit: String = get_os_bit();
     let npcap_key: RegKey = 
     if os_bit == "32-bit" {
-        match hklm.open_subkey("SOFTWARE\\Npcap") {
+        match hklm.open_subkey(format!("SOFTWARE\\{}", software_name)) {
             Ok(key) => key,
-            Err(_) => return (false, String::new()),
+            Err(_) => return false,
         }
     }else{
-        match hklm.open_subkey("SOFTWARE\\WOW6432Node\\Npcap") {
+        match hklm.open_subkey(format!("SOFTWARE\\WOW6432Node\\{}", software_name)) {
             Ok(key) => key,
-            Err(_) => return (false, String::new()),
+            Err(_) => return false,
         }
     };
-    let version: String = npcap_key.get_value("").unwrap_or(String::new());
-    return (true, version);
+    let _version: String = npcap_key.get_value("").unwrap_or(String::new());
+    true
 }
 
 #[allow(dead_code)]
@@ -61,4 +60,28 @@ pub fn get_installed_apps() {
     for v in apps.values() {
         println!("{:?}", v);
     }
+}
+
+#[allow(dead_code)]
+pub fn app_installed(app_name: String) -> bool {
+    let hklm: RegKey = winreg::RegKey::predef(HKEY_LOCAL_MACHINE);
+    let uninstall_key: RegKey = hklm
+        .open_subkey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall")
+        .expect("key is missing");
+
+    for key in uninstall_key.enum_keys() {
+        let key = match key {
+            Ok(key) => key,
+            Err(_) => continue,
+        };
+        //let key = key.unwrap();
+        let subkey: RegKey = uninstall_key
+            .open_subkey(key.clone())
+            .expect("key is missing");
+        let display_name: String = subkey.get_value("DisplayName").unwrap_or(String::new());
+        if display_name == app_name {
+            return true;
+        }
+    }
+    false
 }

@@ -15,4 +15,7 @@ sha2 = "0.10"
 reqwest = { version = "0.11", features = ["blocking", "json"] }
 #tokio = { version = "1", features = ["full"] }
 privilege = "0.3"
+inquire = "0.6"
+
+[target.'cfg(windows)'.dependencies]
 winreg = "0.50"
