@@ -3,6 +3,7 @@ pub const APP_NAME: &str = "np-setup";
 pub const APP_DESCRIPTION: &str = "NetProbe Setup Tool";
 pub const APP_VERSION: &str = "0.1.0";
 // NetProbe
+pub const NETPROBE_INSTALL_DIR_NAME: &str = ".netprobe";
 pub const NETPROBE_GUI_FILENAME: &str = "netprobe_0.3.0_win_x64-setup.exe";
 pub const NETPROBE_GUI_URL: &str = "https://github.com/shellrow/netprobe";
 pub const NETPROBE_GUI_DIST_URL: &str = "https://github.com/shellrow/netprobe/releases/download/v0.3.0/netprobe_0.3.0_win_x64-setup.exe";

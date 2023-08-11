@@ -4,7 +4,7 @@ mod sys;
 mod npcap;
 mod handler;
 
-use std::fmt::{Display, Formatter};
+use std::{fmt::{Display, Formatter}, io::Write};
 use inquire::Select;
 
 #[derive(Debug, Copy, Clone)]
@@ -52,6 +52,7 @@ pub fn show_banner() {
 fn main() {
     show_banner();
     println!();
+    std::io::stdout().flush().unwrap();
     let selected_menu: Menu = Select::new("Select options: ", Menu::VARIANTS.to_vec()).prompt().unwrap();
     match selected_menu {
         Menu::InstallNetProbe | Menu::InstallNetProbeCli | Menu::Update => {

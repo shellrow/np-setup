@@ -1,4 +1,5 @@
 use inquire::Confirm;
+
 use crate::npcap;
 use crate::define;
 
@@ -31,6 +32,18 @@ fn check_dependencies() -> bool {
     true
 }
 
+pub fn get_install_path() -> String {
+    match home::home_dir() {
+        Some(path) => {
+            let path: String = format!("{}\\{}", path.display(), define::NETPROBE_INSTALL_DIR_NAME);
+            path
+        },
+        None => {
+            String::new()
+        },
+    }
+}
+
 pub fn install_netprobe() {
     println!("Installing NetProbe...");
     println!("Downloading NetProbe...");
@@ -39,6 +52,8 @@ pub fn install_netprobe() {
     let mut file: std::fs::File = std::fs::File::create(define::NETPROBE_GUI_FILENAME).unwrap();
     response.copy_to(&mut file).unwrap();
     println!("NetProbe installed successfully !");
+    // print install path
+    println!("Install path: {}", get_install_path());
 }
 
 pub fn install_netprobe_cli() {
@@ -49,4 +64,6 @@ pub fn install_netprobe_cli() {
     let mut file: std::fs::File = std::fs::File::create(define::NETPROBE_CLI_FILENAME).unwrap();
     response.copy_to(&mut file).unwrap();
     println!("NetProbe CLI installed successfully !");
+    // print install path
+    println!("Install path: {}", get_install_path());
 }
