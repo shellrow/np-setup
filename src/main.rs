@@ -2,9 +2,10 @@ mod define;
 mod models;
 mod sys;
 mod npcap;
+mod handler;
 
 use std::fmt::{Display, Formatter};
-use inquire::{Confirm, Select};
+use inquire::Select;
 
 #[derive(Debug, Copy, Clone)]
 enum Menu {
@@ -44,8 +45,8 @@ impl Display for Menu {
 pub fn show_banner() {
     println!("{} {}", define::APP_NAME, define::APP_VERSION);
     println!("{}", define::APP_DESCRIPTION);
-    println!("GUI: {}", define::APP_NETPROBE_GUI_URL);
-    println!("CLI: {}", define::APP_NETPROBE_CLI_URL);
+    println!("GUI: {}", define::NETPROBE_GUI_URL);
+    println!("CLI: {}", define::NETPROBE_CLI_URL);
 }
 
 fn main() {
@@ -56,7 +57,7 @@ fn main() {
         Menu::InstallNetProbe | Menu::InstallNetProbeCli | Menu::Update => {
             // for Windows: Check dependencies
             println!("Checking dependencies...");
-            if check_dependencies() {
+            if handler::check_dependencies() {
                 //println!("Dependencies already installed !");
             } else {
                 println!("Failed to resolve dependencies. exiting...");
@@ -65,11 +66,11 @@ fn main() {
             match selected_menu {
                 Menu::InstallNetProbe => {
                     println!("Install NetProbe");
-                    // TODO: install netprobe
+                    handler::install_netprobe();
                 },
                 Menu::InstallNetProbeCli => {
                     println!("Install NetProbe CLI");
-                    // TODO: install netprobe-cli
+                    handler::install_netprobe_cli();
                 },
                 Menu::Update => {
                     println!("Update");
@@ -95,31 +96,4 @@ fn main() {
     
 }
 
-// Only for windows platform
-#[cfg(target_os = "windows")]
-fn check_dependencies() -> bool {
-    // check if npcap is installed
-    if !npcap::is_npcap_installed() {
-        let ans: bool = Confirm::new("Npcap is not installed, would you like to install it ?")
-        .prompt()
-        .unwrap();
-        if ans == false {
-            println!("Exiting...");
-            return false;
-        }
-        println!("Installing Npcap...");
-        match npcap::install_npcap() {
-            Ok(_) => println!("Npcap installed successfully !"),
-            Err(e) => println!("{}", e),
-        }
-    } else {
-        println!("Npcap is already installed !");
-    }
-    true
-}
 
-// Other platforms
-#[cfg(not(target_os = "windows"))]
-fn check_dependencies() -> bool {
-    true
-}
