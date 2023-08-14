@@ -1,4 +1,5 @@
 use inquire::Confirm;
+use std::ffi::OsString;
 use std::process::{ExitStatus, Command};
 
 use crate::npcap;
@@ -77,11 +78,32 @@ pub fn install_netprobe() {
 
 pub fn install_netprobe_cli() {
     println!("Installing NetProbe CLI...");
-    println!("Downloading NetProbe CLI...");
+    println!("Downloading NetProbe CLI package...");
     // download netprobe cli
     let mut response: reqwest::blocking::Response = reqwest::blocking::get(define::NETPROBE_CLI_DIST_URL).unwrap();
     let mut file: std::fs::File = std::fs::File::create(define::NETPROBE_CLI_FILENAME).unwrap();
     response.copy_to(&mut file).unwrap();
+    // unzip package
+    println!("Unzipping NetProbe CLI package...");
+    let mut archive: zip::ZipArchive<std::fs::File> = zip::ZipArchive::new(std::fs::File::open(define::NETPROBE_CLI_FILENAME).unwrap()).unwrap();
+    archive.extract(get_install_path()).unwrap();
+    // Package path
+    let installed_package_path: String = format!("{}\\{}", get_install_path(), define::NETPROBE_CLI_FILENAME.replace(".zip", ""));
+    // Move np.exe to bin folder
+    println!("Moving NetProbe CLI executable to bin folder...");
+    std::fs::rename(
+        std::path::Path::new(&installed_package_path).join("np.exe"),
+        std::path::Path::new(&get_install_path()).join("bin").join("np.exe"),
+    ).unwrap();
+    // Add netprobe cli to path
+    println!("Adding NetProbe CLI to path...");
+    let mut path: OsString = std::env::var_os("PATH").unwrap();
+    path.push(std::path::Path::new(&get_install_path()).join("bin"));
+    std::env::set_var("PATH", path);
+    // remove zip file
+    println!("Removing NetProbe CLI package...");
+    std::fs::remove_file(define::NETPROBE_CLI_FILENAME).unwrap();
+    // print success message
     println!("NetProbe CLI installed successfully !");
     // print install path
     println!("Install path: {}", get_install_path());
