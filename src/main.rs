@@ -9,20 +9,24 @@ use inquire::Select;
 
 #[derive(Debug, Copy, Clone)]
 enum Menu {
+    Install,
     InstallNetProbe,
     InstallNetProbeCli,
-    UninstallNetProbe,
-    UninstallNetProbeCli,
+    // Uninstall,
+    // UninstallNetProbe,
+    // UninstallNetProbeCli,
     Update,
     Exit,
 }
 
 impl Menu {
     const VARIANTS: &'static [Menu] = &[
+        Self::Install,
         Self::InstallNetProbe,
         Self::InstallNetProbeCli,
-        Self::UninstallNetProbe,
-        Self::UninstallNetProbeCli,
+        // Self::Uninstall,
+        // Self::UninstallNetProbe,
+        // Self::UninstallNetProbeCli,
         Self::Update,
         Self::Exit,
     ];
@@ -31,10 +35,12 @@ impl Menu {
 impl Display for Menu {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         match self {
+            Self::Install => write!(f, "Install (Default)"),
             Self::InstallNetProbe => write!(f, "Install NetProbe"),
             Self::InstallNetProbeCli => write!(f, "Install NetProbe CLI (np)"),
-            Self::UninstallNetProbe => write!(f, "Uninstall NetProbe"),
-            Self::UninstallNetProbeCli => write!(f, "Uninstall NetProbe CLI (np)"),
+            // Self::Uninstall => write!(f, "Uninstall"),
+            // Self::UninstallNetProbe => write!(f, "Uninstall NetProbe"),
+            // Self::UninstallNetProbeCli => write!(f, "Uninstall NetProbe CLI (np)"),
             Self::Update => write!(f, "Check Update"),
             Self::Exit => write!(f, "Exit"),
         }
@@ -55,7 +61,7 @@ fn main() {
     std::io::stdout().flush().unwrap();
     let selected_menu: Menu = Select::new("Select options: ", Menu::VARIANTS.to_vec()).prompt().unwrap();
     match selected_menu {
-        Menu::InstallNetProbe | Menu::InstallNetProbeCli | Menu::Update => {
+        Menu::Install | Menu::InstallNetProbe | Menu::InstallNetProbeCli | Menu::Update => {
             // for Windows: Check dependencies
             println!("Checking dependencies...");
             if handler::check_dependencies() {
@@ -80,12 +86,15 @@ fn main() {
                 _ => unreachable!(),
             }
         },
-        Menu::UninstallNetProbe => {
-            println!("Uninstall NetProbe");
-        },
-        Menu::UninstallNetProbeCli => {
-            println!("Uninstall NetProbe CLI");
-        },
+        // Menu::Uninstall => {
+        //     println!("Uninstall");
+        // },
+        // Menu::UninstallNetProbe => {
+        //     println!("Uninstall NetProbe");
+        // },
+        // Menu::UninstallNetProbeCli => {
+        //     println!("Uninstall NetProbe CLI");
+        // },
         Menu::Exit => {
             println!("exiting...");
             return;
