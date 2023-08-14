@@ -1,4 +1,5 @@
 use inquire::Confirm;
+use std::process::{ExitStatus, Command};
 
 use crate::npcap;
 use crate::define;
@@ -46,14 +47,32 @@ pub fn get_install_path() -> String {
 
 pub fn install_netprobe() {
     println!("Installing NetProbe...");
-    println!("Downloading NetProbe...");
-    // download netprobe
-    let mut response: reqwest::blocking::Response = reqwest::blocking::get(define::NETPROBE_GUI_DIST_URL).unwrap();
-    let mut file: std::fs::File = std::fs::File::create(define::NETPROBE_GUI_FILENAME).unwrap();
-    response.copy_to(&mut file).unwrap();
+    println!("Downloading NetProbe Installer...");
+    // Download netprobe installer if not exists
+    if !std::path::Path::new(define::NETPROBE_GUI_FILENAME).exists() {
+        let mut response: reqwest::blocking::Response = reqwest::blocking::get(define::NETPROBE_GUI_DIST_URL).unwrap();
+        let mut file: std::fs::File = std::fs::File::create(define::NETPROBE_GUI_FILENAME).unwrap();
+        response.copy_to(&mut file).unwrap();
+        println!("Waiting for virus scan to complete (10 seconds) ...");
+        std::thread::sleep(std::time::Duration::from_secs(10));
+    }
+    // Run installer
+    println!("Running NetProbe Installer...");
+    let exit_status: ExitStatus = 
+        match Command::new(define::NETPROBE_GUI_FILENAME).spawn() {
+            Ok(mut child) => {
+                child.wait().unwrap()
+            },
+            Err(e) => {
+                println!("Error: {}", e);
+                return;
+            },
+        };
+    if !exit_status.success() {
+        println!("Error: NetProbe installation failed or cancelled !");
+        return;
+    }
     println!("NetProbe installed successfully !");
-    // print install path
-    println!("Install path: {}", get_install_path());
 }
 
 pub fn install_netprobe_cli() {
