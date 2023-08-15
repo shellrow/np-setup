@@ -1,5 +1,5 @@
 use inquire::Confirm;
-use std::ffi::OsString;
+use winreg::enums::RegDisposition;
 use std::process::{ExitStatus, Command};
 
 use crate::npcap;
@@ -79,7 +79,7 @@ pub fn install_netprobe() {
 pub fn install_netprobe_cli() {
     println!("Installing NetProbe CLI...");
     println!("Downloading NetProbe CLI package...");
-    // download netprobe cli
+    // Download netprobe cli
     let mut response: reqwest::blocking::Response = reqwest::blocking::get(define::NETPROBE_CLI_DIST_URL).unwrap();
     let mut file: std::fs::File = std::fs::File::create(define::NETPROBE_CLI_FILENAME).unwrap();
     response.copy_to(&mut file).unwrap();
@@ -97,9 +97,21 @@ pub fn install_netprobe_cli() {
     ).unwrap();
     // Add netprobe cli to path
     println!("Adding NetProbe CLI to path...");
-    let mut path: OsString = std::env::var_os("PATH").unwrap();
-    path.push(std::path::Path::new(&get_install_path()).join("bin"));
-    std::env::set_var("PATH", path);
+    // Add netprobe cli bin dir to user environment variables Path (using winreg)
+    let hkcu: winreg::RegKey = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
+    let (path, _): (winreg::RegKey, RegDisposition) = hkcu.create_subkey("Environment").unwrap();
+    let mut path_value: String = path.get_value::<String, &str>("Path").unwrap();
+    path_value.push(';');
+    path_value.push_str(&std::path::Path::new(&get_install_path()).join("bin").to_str().unwrap());
+    println!("{}", path_value);
+    path.set_value("Path", &path_value).unwrap();
+    // Add netprobe cli bin dir to system environment variables Path (using winreg)
+    /* let hklm: winreg::RegKey = winreg::RegKey::predef(winreg::enums::HKEY_LOCAL_MACHINE);
+    let (path, _): (winreg::RegKey, RegDisposition) = hklm.create_subkey("SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment").unwrap();
+    let mut path_value: String = path.get_value::<String, &str>("Path").unwrap();
+    path_value.push(';');
+    path_value.push_str(&std::path::Path::new(&get_install_path()).join("bin").to_str().unwrap());
+    path.set_value("Path", &path_value).unwrap(); */
     // remove zip file
     println!("Removing NetProbe CLI package...");
     std::fs::remove_file(define::NETPROBE_CLI_FILENAME).unwrap();
