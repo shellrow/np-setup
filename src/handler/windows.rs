@@ -38,6 +38,23 @@ pub fn get_install_path() -> String {
     }
 }
 
+pub fn check_cli_installed() -> bool {
+    let install_path: &std::path::Path = &std::path::Path::new(&get_install_path()).join(define::NETPROBE_CLI_FILENAME.replace(".zip", ""));
+    if !install_path.exists() {
+        return false;
+    }
+    let install_path = &std::path::Path::new(&get_install_path()).join("bin").join("np.exe");
+    install_path.exists()
+}
+
+pub fn check_env_path() -> bool {
+    let reg_key: winreg::RegKey = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER)
+        .open_subkey_with_flags("Environment", winreg::enums::KEY_READ)
+        .unwrap();
+    let reg_value: String = reg_key.get_value("Path").unwrap();
+    reg_value.contains(".netprobe")
+}
+
 pub fn install_netprobe() {
     println!("Installing NetProbe...");
     println!("Downloading NetProbe Installer...");
@@ -69,6 +86,10 @@ pub fn install_netprobe() {
 }
 
 pub fn install_netprobe_cli() {
+    if check_cli_installed() {
+        println!("NetProbe CLI is already installed !");
+        return;
+    }
     println!("Installing NetProbe CLI...");
     println!("Downloading NetProbe CLI package...");
     // Download netprobe cli
@@ -88,22 +109,24 @@ pub fn install_netprobe_cli() {
         std::path::Path::new(&get_install_path()).join("bin").join("np.exe"),
     ).unwrap();
     // Add netprobe cli to path
-    println!("Adding NetProbe CLI to path...");
-    // Add netprobe cli bin dir to user environment variables Path (using winreg)
-    let hkcu: winreg::RegKey = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
-    let (path, _): (winreg::RegKey, RegDisposition) = hkcu.create_subkey("Environment").unwrap();
-    let mut path_value: String = path.get_value::<String, &str>("Path").unwrap();
-    path_value.push(';');
-    path_value.push_str(&std::path::Path::new(&get_install_path()).join("bin").to_str().unwrap());
-    println!("{}", path_value);
-    path.set_value("Path", &path_value).unwrap();
-    // Add netprobe cli bin dir to system environment variables Path (using winreg)
-    /* let hklm: winreg::RegKey = winreg::RegKey::predef(winreg::enums::HKEY_LOCAL_MACHINE);
-    let (path, _): (winreg::RegKey, RegDisposition) = hklm.create_subkey("SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment").unwrap();
-    let mut path_value: String = path.get_value::<String, &str>("Path").unwrap();
-    path_value.push(';');
-    path_value.push_str(&std::path::Path::new(&get_install_path()).join("bin").to_str().unwrap());
-    path.set_value("Path", &path_value).unwrap(); */
+    if !check_env_path() {
+        println!("Adding NetProbe CLI to path...");
+        // Add netprobe cli bin dir to user environment variables Path (using winreg)
+        let hkcu: winreg::RegKey = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
+        let (path, _): (winreg::RegKey, RegDisposition) = hkcu.create_subkey("Environment").unwrap();
+        let mut path_value: String = path.get_value::<String, &str>("Path").unwrap();
+        path_value.push(';');
+        path_value.push_str(&std::path::Path::new(&get_install_path()).join("bin").to_str().unwrap());
+        println!("{}", path_value);
+        path.set_value("Path", &path_value).unwrap();
+        // Add netprobe cli bin dir to system environment variables Path (using winreg)
+        /* let hklm: winreg::RegKey = winreg::RegKey::predef(winreg::enums::HKEY_LOCAL_MACHINE);
+        let (path, _): (winreg::RegKey, RegDisposition) = hklm.create_subkey("SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment").unwrap();
+        let mut path_value: String = path.get_value::<String, &str>("Path").unwrap();
+        path_value.push(';');
+        path_value.push_str(&std::path::Path::new(&get_install_path()).join("bin").to_str().unwrap());
+        path.set_value("Path", &path_value).unwrap(); */
+    }
     // remove zip file
     println!("Removing NetProbe CLI package...");
     std::fs::remove_file(define::NETPROBE_CLI_FILENAME).unwrap();
