@@ -5,8 +5,6 @@ use std::process::{ExitStatus, Command};
 use crate::npcap;
 use crate::define;
 
-// Only for windows platform
-#[cfg(target_os = "windows")]
 pub fn check_dependencies() -> bool {
     // check if npcap is installed
     if !npcap::is_npcap_installed() {
@@ -25,12 +23,6 @@ pub fn check_dependencies() -> bool {
     } else {
         println!("Npcap is already installed !");
     }
-    true
-}
-
-// Other platforms
-#[cfg(not(target_os = "windows"))]
-fn check_dependencies() -> bool {
     true
 }
 

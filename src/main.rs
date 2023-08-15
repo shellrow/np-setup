@@ -62,7 +62,6 @@ fn main() {
     let selected_menu: Menu = Select::new("Select options: ", Menu::VARIANTS.to_vec()).prompt().unwrap();
     match selected_menu {
         Menu::Install | Menu::InstallNetProbe | Menu::InstallNetProbeCli | Menu::Update => {
-            // for Windows: Check dependencies
             println!("Checking dependencies...");
             if handler::check_dependencies() {
                 //println!("Dependencies already installed !");
